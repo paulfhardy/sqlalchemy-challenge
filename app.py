@@ -43,15 +43,12 @@ def welcome():
         f"<a href='/api/v1.0/2016-05-01/2016-05-15'>Temperature Summary stats between May 1st 2016 and May 15th 2016</a><br/>"          
            )
 
-# Additional static routes        
+
+""" Convert the query results to a dictionary using date as the key and prcp as the value."""        
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Create our session (link) from Python to the DB
     session = Session(engine)
-
-    """Return a list of precipitation data for the last year including the date and prcp measurements"""
-    
-    #prcp_measurements = session.query(Measurement.date, Measurement.prcp).all()
     
     prcp_measurements = session.query(Measurement.date, Measurement.prcp).\
                         filter(Measurement.date > '2016-08-23').\
@@ -60,23 +57,22 @@ def precipitation():
     # Close session to the DB
     session.close()
 
-    # Create a dictionary from the row data and append to a list of all_precipitation
+
     all_precipitation = []
+
     for date, prcp in prcp_measurements:
         precipitation_dict = {}
-        precipitation_dict["date"] = date
-        precipitation_dict["prcp"] = prcp
-        all_precipitation.append(precipitation_dict)
+        precipitation_dict[date] = prcp
+        all_precipitation.append(precipitation_dict)    
 
     return jsonify(all_precipitation)
 
-
+"""Return a JSON list of stations from the dataset"""
 @app.route("/api/v1.0/stations")
 def stations():
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
-    """Return a list of all station names"""
     # Query all stations
     results = session.query(Station.station).all()
 
@@ -89,13 +85,12 @@ def stations():
 
     return jsonify(stations_list)
 
-
+"""Query the dates and temperature observations of the most active station for the last year of data."""
+"""Return a JSON list of temperature observations (TOBS) for the previous year."""
 @app.route("/api/v1.0/tobs")
 def tobs():
     # Create our session (link) from Python to the DB
     session = Session(engine)
-
-    """Return a list of tobs data for the most recent year including the date and tobs measurement"""
     
     temp_hist = session.query(Measurement.date,Measurement.tobs).filter(Measurement.station=="USC00519281").\
         filter(Measurement.date >= '2016-08-18').\
@@ -103,8 +98,7 @@ def tobs():
     
     # Close session to the DB
     session.close()
-    #print(temp_hist)
-    
+ 
     # Create a dictionary from the row data and append to a list of all_temp_hist
     all_temp_hist = []
     for date, tobs in temp_hist:
@@ -115,10 +109,11 @@ def tobs():
 
     return jsonify(all_temp_hist)
 
+
+"""Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start date"""
 @app.route("/api/v1.0/<start>")
 def temp_summary_stats(start):
-    """Return a JSON list of the minimum temperature, the average temperature, 
-    and the max temperature for a given start date"""
+    
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
@@ -138,10 +133,11 @@ def temp_summary_stats(start):
 
     return jsonify(temp_summ_list)
 
+
+"""Return a JSON list of the minimum temperature, the average temperature, and the max temperature for a given start date and end date range"""
 @app.route("/api/v1.0/<start>/<end>")
 def temp_range_summary_stats(start,end):
-    """Return a JSON list of the minimum temperature, the average temperature, 
-    and the max temperature for a given start date and end date range"""
+    
     # Create our session (link) from Python to the DB
     session = Session(engine)
 
